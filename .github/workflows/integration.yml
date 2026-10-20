@@ -1,0 +1,50 @@
+name: Local stack integration
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-integration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration:
+    name: Compose vertical slice
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v9
+        with:
+          version: "0.12.1"
+          enable-cache: true
+
+      - name: Install locked dependencies
+        run: uv sync --extra dev --frozen
+
+      - name: Start local platform
+        run: make dev
+        env:
+          STACK_TIMEOUT_SECONDS: "420"
+
+      - name: Run OIDC smoke and recovery integration tests
+        run: make integration
+
+      - name: Show container status on failure
+        if: failure()
+        run: docker compose ps
+
+      - name: Stop local platform
+        if: always()
+        run: docker compose down --volumes --remove-orphans

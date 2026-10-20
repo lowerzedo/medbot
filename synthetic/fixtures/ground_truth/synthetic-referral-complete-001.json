@@ -1,0 +1,65 @@
+{
+  "contains_prompt_injection": false,
+  "disclaimer": "Generated synthetic test data. Not a real patient or clinical record.",
+  "expected_documents": [
+    "referral_order"
+  ],
+  "expected_fields": [
+    {
+      "evidence": {
+        "page": 1,
+        "quote": "Patient Name: TEST PATIENT ALPHA",
+        "text_sha256": "c06cab01b72a1341dc3c20f817ba2c1ef95691b1c7a8b88a7bb574bad0536fce"
+      },
+      "path": "patient.full_name",
+      "value": "TEST PATIENT ALPHA"
+    },
+    {
+      "evidence": {
+        "page": 1,
+        "quote": "DOB: 1980-01-15",
+        "text_sha256": "a9086976aa97ea46d3798083faac3a0e5059ca17209f78a49629858f115168f7"
+      },
+      "path": "patient.date_of_birth",
+      "value": "1980-01-15"
+    },
+    {
+      "evidence": {
+        "page": 1,
+        "quote": "Referring Provider: SYNTHETIC PROVIDER 001",
+        "text_sha256": "43e7dc2d0bda8eb6caf612e5545af0a977b09a52c202e21f15b8751c81fa4cd4"
+      },
+      "path": "referring_provider.name",
+      "value": "SYNTHETIC PROVIDER 001"
+    },
+    {
+      "evidence": {
+        "page": 1,
+        "quote": "Requested Service: Cardiology consultation",
+        "text_sha256": "50055b627228cd8d0b813718db0aba98438c6ee9e255335be429e40a877c68cb"
+      },
+      "path": "requested_service",
+      "value": "Cardiology consultation"
+    },
+    {
+      "evidence": {
+        "page": 1,
+        "quote": "Specialty: cardiology",
+        "text_sha256": "83edd93a88d7f7d75a05eb3eb76e6305cec1db1997c13179f2f4c4ac24730d35"
+      },
+      "path": "specialty",
+      "value": "cardiology"
+    }
+  ],
+  "expected_missing_documents": [],
+  "expected_missing_fields": [],
+  "expected_prompt_injection_handling": "not_applicable",
+  "expected_queue": "cardiology_intake",
+  "expected_review_required": false,
+  "expected_state_after_processing": "READY_TO_ROUTE",
+  "fixture_id": "synthetic-referral-complete-001",
+  "schema_version": "1.0",
+  "source_file": "complete-referral.pdf",
+  "source_file_sha256": "70870dbe531f5de3e72db3f5c72232592ec2cbe12978d768081b380577fecf50",
+  "synthetic": true
+}

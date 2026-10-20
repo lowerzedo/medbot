@@ -1,0 +1,31 @@
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+.venv/
+
+# Generated evaluation outputs
+eval/reports/latest.json
+eval/reports/latest.md
+eval/reports/workflow-latest.json
+eval/reports/workflow-latest.md
+eval/reports/documents-latest.json
+
+# PDF render and artifact scratch space
+tmp/
+output/
+
+# Editors and operating systems
+.DS_Store
+.idea/
+.vscode/

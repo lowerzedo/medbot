@@ -1,0 +1,362 @@
+name: medbot
+
+services:
+  ollama:
+    image: ollama/ollama:0.40.3
+    profiles: ["ai"]
+    environment:
+      OLLAMA_NO_CLOUD: "1"
+      OLLAMA_NUM_PARALLEL: "1"
+      OLLAMA_MAX_LOADED_MODELS: "1"
+      OLLAMA_CONTEXT_LENGTH: "8192"
+    volumes:
+      - ollama-data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - medbot-local
+  postgres:
+    image: postgres:18.6-bookworm
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:-local-only-postgres-admin-password}
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+      MEDBOT_POSTGRES_DB: ${MEDBOT_POSTGRES_DB:-medbot}
+      MEDBOT_POSTGRES_USER: ${MEDBOT_POSTGRES_USER:-medbot_local}
+      MEDBOT_POSTGRES_PASSWORD: ${MEDBOT_POSTGRES_PASSWORD:-local-only-postgres-password}
+      HAPI_POSTGRES_PASSWORD: ${HAPI_POSTGRES_PASSWORD:-local-only-hapi-db-password}
+      KEYCLOAK_POSTGRES_PASSWORD: ${KEYCLOAK_POSTGRES_PASSWORD:-local-only-keycloak-db-password}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      # PostgreSQL 18 stores versioned data below /var/lib/postgresql.
+      - postgres-data:/var/lib/postgresql
+      - ./infra/local/postgres/init-databases.sh:/docker-entrypoint-initdb.d/10-init-databases.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - medbot-local
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.1
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:-local-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-local-only-keycloak-admin-password}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_SCHEMA: keycloak
+      KC_DB_USERNAME: keycloak_local
+      KC_DB_PASSWORD: ${KEYCLOAK_POSTGRES_PASSWORD:-local-only-keycloak-db-password}
+      KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "true"
+    ports:
+      - "${KEYCLOAK_PORT:-8081}:8080"
+    volumes:
+      - ./infra/local/keycloak/medbot-realm.json:/opt/keycloak/data/import/medbot-realm.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          { printf 'HEAD /health/ready HTTP/1.0\r\n\r\n' >&0;
+          grep 'HTTP/1.0 200'; } 0<>/dev/tcp/127.0.0.1/9000
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - medbot-local
+
+  minio:
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MEDBOT_S3_ACCESS_KEY_ID:-medbot-local-access-key}
+      MINIO_ROOT_PASSWORD: ${MEDBOT_S3_SECRET_ACCESS_KEY:-local-only-minio-secret-key}
+      # Public deterministic test key, for the synthetic local stack only. No external KMS.
+      MINIO_KMS_SECRET_KEY_FILE: /etc/minio/synthetic-kms-key.txt
+      MINIO_KMS_AUTO_ENCRYPTION: "on"
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio-data:/data
+      - ./infra/local/minio/synthetic-kms-key.txt:/etc/minio/synthetic-kms-key.txt:ro
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - medbot-local
+
+  minio-init:
+    image: minio/mc:RELEASE.2025-08-13T08-35-41Z
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        mc alias set local http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}"
+        mc mb --ignore-existing "local/$${MINIO_BUCKET}"
+        mc version enable "local/$${MINIO_BUCKET}"
+        mc anonymous set none "local/$${MINIO_BUCKET}"
+    environment:
+      MINIO_ROOT_USER: ${MEDBOT_S3_ACCESS_KEY_ID:-medbot-local-access-key}
+      MINIO_ROOT_PASSWORD: ${MEDBOT_S3_SECRET_ACCESS_KEY:-local-only-minio-secret-key}
+      MINIO_BUCKET: ${MEDBOT_S3_BUCKET:-medbot-documents}
+    depends_on:
+      minio:
+        condition: service_healthy
+    restart: "no"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - medbot-local
+
+  hapi-fhir:
+    # HAPI JPA Starter revision 8.10.0-3 packages HAPI FHIR core 8.10.0.
+    image: hapiproject/hapi:v8.10.0-3
+    environment:
+      SPRING_CONFIG_ADDITIONAL_LOCATION: file:/app/config/medbot-application.yaml
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/hapi?currentSchema=hapi
+      SPRING_DATASOURCE_USERNAME: hapi_local
+      SPRING_DATASOURCE_PASSWORD: ${HAPI_POSTGRES_PASSWORD:-local-only-hapi-db-password}
+      HIBERNATE_DIALECT: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
+    ports:
+      - "${HAPI_FHIR_PORT:-8082}:8080"
+    volumes:
+      - ./infra/local/hapi/application.yaml:/app/config/medbot-application.yaml:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "java", "-cp", "/app", "HealthCheck"]
+      interval: 10s
+      timeout: 10s
+      retries: 36
+      start_period: 60s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - medbot-local
+
+  tempo:
+    image: grafana/tempo:2.10.7
+    command: ["-config.file=/etc/tempo.yaml"]
+    ports:
+      - "${TEMPO_PORT:-3200}:3200"
+    volumes:
+      - ./infra/local/tempo/tempo.yaml:/etc/tempo.yaml:ro
+      - tempo-data:/var/tempo
+    healthcheck:
+      # Tempo is distroless and ships no shell/curl. This checks the live binary;
+      # scripts/local-health.sh performs the HTTP readiness probe from the host.
+      test: ["CMD", "/tempo", "-version"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 15s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - medbot-local
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.159.0
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    ports:
+      - "${OTEL_GRPC_PORT:-4317}:4317"
+      - "${OTEL_HTTP_PORT:-4318}:4318"
+      - "${OTEL_HEALTH_PORT:-13133}:13133"
+    volumes:
+      - ./observability/otel/collector.yaml:/etc/otelcol-contrib/config.yaml:ro
+    depends_on:
+      tempo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/otelcol-contrib", "components"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - medbot-local
+
+  prometheus:
+    image: prom/prometheus:v3.11.3
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=7d
+      - --web.enable-lifecycle
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:9090/-/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - medbot-local
+
+  grafana:
+    image: grafana/grafana:13.1.4
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-local-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-local-only-grafana-password}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      prometheus:
+        condition: service_healthy
+      tempo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - medbot-local
+
+  provider-secret-init:
+    image: python:3.13-slim
+    command: ["python", "/init-provider-secret.py"]
+    volumes:
+      - ./infra/local/init-provider-secret.py:/init-provider-secret.py:ro
+      - provider-secrets:/provider-secrets
+    network_mode: none
+    restart: "no"
+    security_opt:
+      - no-new-privileges:true
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: medbot-api:local
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        alembic upgrade head
+        exec uvicorn medbot.main:create_app --factory --host 0.0.0.0 --port 8000
+    environment:
+      MEDBOT_DATABASE_URL: ${MEDBOT_DATABASE_URL:-postgresql+psycopg://medbot_local:local-only-postgres-password@postgres:5432/medbot}
+      MEDBOT_AUTH_MODE: ${MEDBOT_AUTH_MODE:-oidc}
+      MEDBOT_DEV_TOKENS_JSON: ${MEDBOT_DEV_TOKENS_JSON:-{}}
+      MEDBOT_OIDC_ISSUER: ${MEDBOT_OIDC_ISSUER:-http://localhost:8081/realms/medbot}
+      MEDBOT_OIDC_AUDIENCE: ${MEDBOT_OIDC_AUDIENCE:-medbot-api}
+      MEDBOT_OIDC_JWKS_URL: ${MEDBOT_OIDC_JWKS_URL:-http://keycloak:8080/realms/medbot/protocol/openid-connect/certs}
+      MEDBOT_OBJECT_STORAGE: ${MEDBOT_OBJECT_STORAGE:-s3}
+      MEDBOT_S3_ENDPOINT_URL: ${MEDBOT_S3_ENDPOINT_URL:-http://minio:9000}
+      MEDBOT_S3_ACCESS_KEY_ID: ${MEDBOT_S3_ACCESS_KEY_ID:-medbot-local-access-key}
+      MEDBOT_S3_SECRET_ACCESS_KEY: ${MEDBOT_S3_SECRET_ACCESS_KEY:-local-only-minio-secret-key}
+      MEDBOT_S3_BUCKET: ${MEDBOT_S3_BUCKET:-medbot-documents}
+      MEDBOT_S3_REGION: ${MEDBOT_S3_REGION:-us-east-1}
+      MEDBOT_FHIR_BASE_URL: ${MEDBOT_FHIR_BASE_URL:-http://hapi-fhir:8080/fhir}
+      MEDBOT_MAX_UPLOAD_BYTES: ${MEDBOT_MAX_UPLOAD_BYTES:-10485760}
+      MEDBOT_DOCUMENT_EXTRACTOR: ${MEDBOT_DOCUMENT_EXTRACTOR:-pdfium-tesseract}
+      MEDBOT_AI_PROVIDER: ${MEDBOT_AI_PROVIDER:-fixture}
+      MEDBOT_AI_MODEL: ${MEDBOT_AI_MODEL:-qwen3:4b}
+      MEDBOT_OLLAMA_BASE_URL: ${MEDBOT_OLLAMA_BASE_URL:-http://ollama:11434/v1}
+      MEDBOT_OPENAI_API_KEY: ${MEDBOT_OPENAI_API_KEY:-}
+      MEDBOT_GEMINI_API_KEY: ${MEDBOT_GEMINI_API_KEY:-}
+      MEDBOT_PROVIDER_ENCRYPTION_KEY_FILE: /provider-secrets/encryption-key
+      MEDBOT_CORS_ORIGINS: ${MEDBOT_CORS_ORIGINS:-http://localhost:3000}
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-medbot-api}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4318/v1/traces}
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+    ports:
+      - "${MEDBOT_API_PORT:-8000}:8000"
+    depends_on:
+      provider-secret-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+      hapi-fhir:
+        condition: service_healthy
+      otel-collector:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=3)
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - provider-secrets:/provider-secrets:ro
+    networks:
+      - medbot-local
+
+networks:
+  medbot-local:
+
+volumes:
+  provider-secrets:
+  ollama-data:
+  postgres-data:
+  minio-data:
+  prometheus-data:
+  grafana-data:
+  tempo-data:

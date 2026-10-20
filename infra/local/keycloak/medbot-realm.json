@@ -1,0 +1,350 @@
+{
+  "realm": "medbot",
+  "displayName": "MedBot local development",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": false,
+  "rememberMe": false,
+  "verifyEmail": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "failureFactor": 5,
+  "roles": {
+    "realm": [
+      {
+        "name": "intake_specialist",
+        "description": "Create referrals and upload documents"
+      },
+      {
+        "name": "reviewer",
+        "description": "Review and correct extracted referral fields"
+      },
+      {
+        "name": "supervisor",
+        "description": "Route referrals and oversee workflow"
+      },
+      {
+        "name": "auditor",
+        "description": "Read referral audit history"
+      },
+      {
+        "name": "administrator",
+        "description": "Administer the local demonstration"
+      },
+      {
+        "name": "service",
+        "description": "Run non-interactive processing work"
+      }
+    ]
+  },
+  "clientScopes": [
+    {
+      "name": "medbot-claims",
+      "description": "MedBot subject, audience, organization, and role claims",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "subject",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-sub-mapper",
+          "consentRequired": false,
+          "config": {
+            "access.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "organization-id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "organization_id",
+            "claim.name": "organization_id",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "multivalued": "false"
+          }
+        },
+        {
+          "name": "medbot-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "medbot-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "realm roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "foo",
+            "introspection.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String",
+            "multivalued": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "medbot-api",
+      "name": "MedBot API",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "bearerOnly": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false
+    },
+    {
+      "clientId": "medbot-ui",
+      "name": "MedBot reviewer UI",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:3000/*"
+      },
+      "defaultClientScopes": [
+        "medbot-claims"
+      ]
+    },
+    {
+      "clientId": "medbot-service",
+      "name": "MedBot local processing service",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "local-only-service-client-secret",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "defaultClientScopes": [
+        "medbot-claims"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "synthetic-intake-alpha",
+      "email": "intake-alpha@synthetic.example.invalid",
+      "firstName": "Synthetic",
+      "lastName": "Intake Alpha",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "organization_id": [
+          "org-synthetic-alpha"
+        ]
+      },
+      "realmRoles": [
+        "intake_specialist"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "local-only-intake-password",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "synthetic-reviewer-alpha",
+      "email": "reviewer-alpha@synthetic.example.invalid",
+      "firstName": "Synthetic",
+      "lastName": "Reviewer Alpha",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "organization_id": [
+          "org-synthetic-alpha"
+        ]
+      },
+      "realmRoles": [
+        "reviewer"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "local-only-reviewer-password",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "synthetic-supervisor-alpha",
+      "email": "supervisor-alpha@synthetic.example.invalid",
+      "firstName": "Synthetic",
+      "lastName": "Supervisor Alpha",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "organization_id": [
+          "org-synthetic-alpha"
+        ]
+      },
+      "realmRoles": [
+        "supervisor",
+        "reviewer"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "local-only-supervisor-password",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "synthetic-auditor-alpha",
+      "email": "auditor-alpha@synthetic.example.invalid",
+      "firstName": "Synthetic",
+      "lastName": "Auditor Alpha",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "organization_id": [
+          "org-synthetic-alpha"
+        ]
+      },
+      "realmRoles": [
+        "auditor"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "local-only-auditor-password",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "synthetic-admin-alpha",
+      "email": "admin-alpha@synthetic.example.invalid",
+      "firstName": "Synthetic",
+      "lastName": "Administrator Alpha",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "organization_id": [
+          "org-synthetic-alpha"
+        ]
+      },
+      "realmRoles": [
+        "administrator",
+        "supervisor",
+        "reviewer",
+        "intake_specialist",
+        "auditor"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "local-only-admin-password",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "synthetic-reviewer-beta",
+      "email": "reviewer-beta@synthetic.example.invalid",
+      "firstName": "Synthetic",
+      "lastName": "Reviewer Beta",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "organization_id": [
+          "org-synthetic-beta"
+        ]
+      },
+      "realmRoles": [
+        "reviewer"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "local-only-reviewer-beta-password",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "service-account-medbot-service",
+      "enabled": true,
+      "serviceAccountClientId": "medbot-service",
+      "attributes": {
+        "organization_id": [
+          "org-synthetic-alpha"
+        ]
+      },
+      "realmRoles": [
+        "service"
+      ]
+    },
+    {
+      "username": "synthetic-settings-alpha",
+      "email": "settings-alpha@synthetic.example.invalid",
+      "firstName": "Synthetic",
+      "lastName": "Settings",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "organization_id": [
+          "org-synthetic-alpha"
+        ]
+      },
+      "realmRoles": [
+        "administrator"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "local-only-settings-password",
+          "temporary": false
+        }
+      ]
+    }
+  ],
+  "components": {
+    "org.keycloak.userprofile.UserProfileProvider": [
+      {
+        "providerId": "declarative-user-profile",
+        "subComponents": {},
+        "config": {
+          "kc.user.profile.config": [
+            "{\"attributes\":[{\"name\":\"username\",\"displayName\":\"${username}\",\"validations\":{\"length\":{\"min\":3,\"max\":255},\"username-prohibited-characters\":{},\"up-username-not-idn-homograph\":{}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"email\",\"displayName\":\"${email}\",\"validations\":{\"email\":{},\"length\":{\"max\":255}},\"required\":{\"roles\":[\"user\"]},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"firstName\",\"displayName\":\"${firstName}\",\"validations\":{\"length\":{\"max\":255},\"person-name-prohibited-characters\":{}},\"required\":{\"roles\":[\"user\"]},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"lastName\",\"displayName\":\"${lastName}\",\"validations\":{\"length\":{\"max\":255},\"person-name-prohibited-characters\":{}},\"required\":{\"roles\":[\"user\"]},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"organization_id\",\"displayName\":\"Organization\",\"validations\":{\"length\":{\"max\":100}},\"permissions\":{\"view\":[\"admin\"],\"edit\":[\"admin\"]},\"multivalued\":false}],\"groups\":[{\"name\":\"user-metadata\",\"displayHeader\":\"User metadata\",\"displayDescription\":\"Attributes, which refer to user metadata\"}]}"
+          ]
+        }
+      }
+    ]
+  }
+}

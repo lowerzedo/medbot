@@ -1,0 +1,2 @@
+# Preserve source-document bytes, cross-reference offsets, and evidence hashes.
+*.pdf binary

@@ -1,0 +1,12 @@
+title = "MedBot gitleaks configuration"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Obvious local-only synthetic credentials are intentional development fixtures"
+regexTarget = "match"
+regexes = [
+  '''local-only-[A-Za-z0-9-]+''',
+  '''local-dev-token''',
+]

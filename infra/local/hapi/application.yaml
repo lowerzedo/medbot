@@ -1,0 +1,51 @@
+management:
+  endpoints:
+    access:
+      default: none
+    web:
+      exposure:
+        include: "health,prometheus"
+  endpoint:
+    health:
+      access: read_only
+      probes:
+        enabled: true
+    prometheus:
+      access: read_only
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+  jpa:
+    properties:
+      hibernate:
+        dialect: ${HIBERNATE_DIALECT}
+        hbm2ddl:
+          auto: update
+
+hapi:
+  fhir:
+    fhir_version: R4
+    allow_external_references: false
+    auto_create_placeholder_reference_targets: false
+    bulk_export_enabled: false
+    bulk_import_enabled: false
+    cr:
+      enabled: false
+    ig_runtime_upload_enabled: false
+    narrative_enabled: false
+    tester:
+      home:
+        name: MedBot local FHIR
+        server_address: http://localhost:8082/fhir
+        refuse_to_fetch_third_party_urls: true
+        fhir_version: R4

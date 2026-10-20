@@ -1,0 +1,58 @@
+{
+  "contains_prompt_injection": false,
+  "disclaimer": "Generated synthetic test data. Not a real patient or clinical record.",
+  "expected_documents": [
+    "referral_order"
+  ],
+  "expected_fields": [
+    {
+      "evidence": {
+        "page": 1,
+        "quote": "Patient Name: TEST PATIENT BETA",
+        "text_sha256": "ad794755be98ceb74de32cc34ccd6df43689754fdb514bcc308ac0dc8fabb8b1"
+      },
+      "path": "patient.full_name",
+      "value": "TEST PATIENT BETA"
+    },
+    {
+      "evidence": {
+        "page": 1,
+        "quote": "Referring Provider: SYNTHETIC PROVIDER 002",
+        "text_sha256": "6ed615897cabfb1bd497ed9376d6da8147dc2a9fcf97edc63cf5e03665deff96"
+      },
+      "path": "referring_provider.name",
+      "value": "SYNTHETIC PROVIDER 002"
+    },
+    {
+      "evidence": {
+        "page": 1,
+        "quote": "Requested Service: Orthopedics consultation",
+        "text_sha256": "7fae411e85aa5df8bfba86b2a5428365742c5dd0eb22d9637dc06ecc0d5e89b8"
+      },
+      "path": "requested_service",
+      "value": "Orthopedics consultation"
+    },
+    {
+      "evidence": {
+        "page": 1,
+        "quote": "Specialty: orthopedics",
+        "text_sha256": "92eaa0563afd7a01edb4ca217fa451e859ed4cecb63e62f4a6c276f273b302a6"
+      },
+      "path": "specialty",
+      "value": "orthopedics"
+    }
+  ],
+  "expected_missing_documents": [],
+  "expected_missing_fields": [
+    "patient.date_of_birth"
+  ],
+  "expected_prompt_injection_handling": "not_applicable",
+  "expected_queue": "musculoskeletal_intake",
+  "expected_review_required": true,
+  "expected_state_after_processing": "NEEDS_REVIEW",
+  "fixture_id": "synthetic-referral-incomplete-001",
+  "schema_version": "1.0",
+  "source_file": "incomplete-referral.pdf",
+  "source_file_sha256": "8c5e2e6d615b2d4814d196f1ef0bb6d6bb341cec0dbc2327224337a71b638419",
+  "synthetic": true
+}

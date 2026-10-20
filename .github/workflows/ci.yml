@@ -1,0 +1,86 @@
+name: Backend CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Format, lint, typecheck, and unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v9
+        with:
+          version: "0.12.1"
+          enable-cache: true
+
+      - name: Install locked dependencies
+        run: uv sync --extra dev --frozen
+
+      - name: Validate Compose model
+        run: make compose-config
+
+      - name: Check formatting and lint
+        run: make lint
+
+      - name: Typecheck
+        run: make typecheck
+
+      - name: Run unit tests
+        run: make test
+
+      - name: Regenerate deterministic fixtures
+        run: make generate-fixtures
+
+      - name: Reject fixture drift
+        run: git diff --exit-code -- synthetic/fixtures
+
+      - name: Validate fixture ground truth
+        run: make eval
+
+      - name: Benchmark the synthetic workflow and recovery
+        run: make benchmark
+
+  security:
+    name: Secret, dependency, and configuration scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out full history
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Scan Git history for secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Scan dependencies, secrets, and misconfiguration
+        uses: aquasecurity/trivy-action@0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,secret,misconfig
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: table

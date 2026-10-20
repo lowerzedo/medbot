@@ -1,0 +1,25 @@
+{
+  "cases": [
+    {
+      "fixture_id": "synthetic-referral-complete-001",
+      "ground_truth": "ground_truth/synthetic-referral-complete-001.json",
+      "pdf": "complete-referral.pdf",
+      "sha256": "70870dbe531f5de3e72db3f5c72232592ec2cbe12978d768081b380577fecf50"
+    },
+    {
+      "fixture_id": "synthetic-referral-incomplete-001",
+      "ground_truth": "ground_truth/synthetic-referral-incomplete-001.json",
+      "pdf": "incomplete-referral.pdf",
+      "sha256": "8c5e2e6d615b2d4814d196f1ef0bb6d6bb341cec0dbc2327224337a71b638419"
+    },
+    {
+      "fixture_id": "synthetic-referral-prompt-injection-001",
+      "ground_truth": "ground_truth/synthetic-referral-prompt-injection-001.json",
+      "pdf": "prompt-injection-referral.pdf",
+      "sha256": "a61880ba81d37a22f887b3d079f42cf5a43fdc69ec4ad2ef52f9c2c0de2f2075"
+    }
+  ],
+  "generator": "synthetic/generator/generate_referrals.py",
+  "schema_version": "1.0",
+  "synthetic": true
+}

@@ -1,0 +1,67 @@
+[
+  {
+    "case_id": "synthetic-manual-recovery",
+    "documents": [["Patient Name: TEST RECOVERY ALPHA", "Referring Provider: SYNTHETIC PROVIDER", "Requested Service: Synthetic consultation"]],
+    "expected_fields": {"patient.full_name": "TEST RECOVERY ALPHA", "referring_provider.name": "SYNTHETIC PROVIDER", "requested_service": "Synthetic consultation"},
+    "expected_missing_fields": ["patient.date_of_birth"],
+    "expected_status": "NEEDS_REVIEW",
+    "recovery": "manual",
+    "recovery_value": "1984-02-03",
+    "expected_final_status": "ROUTED"
+  },
+  {
+    "case_id": "synthetic-supplemental-recovery",
+    "documents": [["Patient Name: TEST RECOVERY BETA", "Referring Provider: SYNTHETIC PROVIDER", "Requested Service: Synthetic consultation"]],
+    "expected_fields": {"patient.full_name": "TEST RECOVERY BETA", "referring_provider.name": "SYNTHETIC PROVIDER", "requested_service": "Synthetic consultation"},
+    "expected_missing_fields": ["patient.date_of_birth"],
+    "expected_status": "NEEDS_REVIEW",
+    "recovery": "supplemental",
+    "recovery_value": "1984-02-03",
+    "expected_final_status": "ROUTED"
+  },
+  {
+    "case_id": "synthetic-conflicting-dob",
+    "documents": [["Patient Name: TEST CONFLICT ALPHA", "DOB: 1984-02-03", "Referring Provider: SYNTHETIC PROVIDER", "Requested Service: Synthetic consultation"], ["DOB: 1992-04-05"]],
+    "expected_fields": {"patient.full_name": "TEST CONFLICT ALPHA", "referring_provider.name": "SYNTHETIC PROVIDER", "requested_service": "Synthetic consultation"},
+    "expected_missing_fields": ["patient.date_of_birth"],
+    "expected_status": "NEEDS_REVIEW",
+    "expected_issues": ["conflicting_values"],
+    "recovery": "conflict",
+    "recovery_value": "1984-02-03",
+    "expected_final_status": "ROUTED"
+  },
+  {
+    "case_id": "synthetic-wrong-field-citation",
+    "documents": [["Patient Name: TEST GROUNDING ALPHA", "Referring Provider: SYNTHETIC PROVIDER", "Requested Service: 1984-02-03"]],
+    "provider_fault": "wrong_field",
+    "expected_fields": {"patient.full_name": "TEST GROUNDING ALPHA", "referring_provider.name": "SYNTHETIC PROVIDER", "requested_service": "1984-02-03"},
+    "expected_missing_fields": ["patient.date_of_birth"],
+    "expected_status": "NEEDS_REVIEW",
+    "expected_issues": ["unsupported_evidence"]
+  },
+  {
+    "case_id": "synthetic-truncated-citation",
+    "documents": [["Patient Name: TEST GROUNDING BETA", "DOB: 1984-02-03", "Referring Provider: SYNTHETIC PROVIDER", "Requested Service: Synthetic consultation"]],
+    "provider_fault": "truncated_quote",
+    "expected_fields": {"patient.full_name": "TEST GROUNDING BETA", "referring_provider.name": "SYNTHETIC PROVIDER", "requested_service": "Synthetic consultation"},
+    "expected_missing_fields": ["patient.date_of_birth"],
+    "expected_status": "NEEDS_REVIEW",
+    "expected_issues": ["unsupported_evidence"]
+  },
+  {
+    "case_id": "synthetic-fabricated-citation",
+    "documents": [["Patient Name: TEST GROUNDING GAMMA", "DOB: 1984-02-03", "Referring Provider: SYNTHETIC PROVIDER", "Requested Service: Synthetic consultation"]],
+    "provider_fault": "fabricated_document",
+    "expected_fields": {"patient.full_name": "TEST GROUNDING GAMMA", "referring_provider.name": "SYNTHETIC PROVIDER", "requested_service": "Synthetic consultation"},
+    "expected_missing_fields": ["patient.date_of_birth"],
+    "expected_status": "NEEDS_REVIEW",
+    "expected_issues": ["unsupported_evidence"]
+  },
+  {
+    "case_id": "synthetic-equivalent-dates",
+    "documents": [["Patient Name: TEST DATE ALPHA", "DOB: 1984-02-03", "Referring Provider: SYNTHETIC PROVIDER", "Requested Service: Synthetic consultation"], ["Date of Birth: 02/03/1984"]],
+    "expected_fields": {"patient.full_name": "TEST DATE ALPHA", "patient.date_of_birth": "1984-02-03", "referring_provider.name": "SYNTHETIC PROVIDER", "requested_service": "Synthetic consultation"},
+    "expected_missing_fields": [],
+    "expected_status": "READY_TO_ROUTE"
+  }
+]

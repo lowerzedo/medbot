@@ -1,0 +1,138 @@
+%PDF-1.4
+%“Œ‹ž ReportLab Generated PDF document (opensource)
+1 0 obj
+<<
+/F1 2 0 R /F2 3 0 R
+>>
+endobj
+2 0 obj
+<<
+/BaseFont /Helvetica /Encoding /WinAnsiEncoding /Name /F1 /Subtype /Type1 /Type /Font
+>>
+endobj
+3 0 obj
+<<
+/BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding /Name /F2 /Subtype /Type1 /Type /Font
+>>
+endobj
+4 0 obj
+<<
+/Contents 8 0 R /MediaBox [ 0 0 612 792 ] /Parent 7 0 R /Resources <<
+/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+>> /Rotate 0 /Trans <<
+
+>> 
+  /Type /Page
+>>
+endobj
+5 0 obj
+<<
+/PageMode /UseNone /Pages 7 0 R /Type /Catalog
+>>
+endobj
+6 0 obj
+<<
+/Author (anonymous) /CreationDate (D:20000101000000+00'00') /Creator (anonymous) /Keywords () /ModDate (D:20000101000000+00'00') /Producer (ReportLab PDF Library - \(opensource\)) 
+  /Subject (unspecified) /Title (untitled) /Trapped /False
+>>
+endobj
+7 0 obj
+<<
+/Count 1 /Kids [ 4 0 R ] /Type /Pages
+>>
+endobj
+8 0 obj
+<<
+/Length 2131
+>>
+stream
+1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
+.062745 .164706 .262745 rg
+n 0 688 612 104 re f*
+1 1 1 rg
+BT /F2 22 Tf 26.4 TL ET
+BT 1 0 0 1 54 738 Tm (MedBot Synthetic Referral) Tj T* ET
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 54 714 Tm (Incomplete synthetic referral) Tj T* ET
+1 .956863 .839216 rg
+n
+60 638 m
+552 638 l
+555.3168 638 558 640.6832 558 644 c
+558 662 l
+558 665.3168 555.3168 668 552 668 c
+60 668 l
+56.6832 668 54 665.3168 54 662 c
+54 644 l
+54 640.6832 56.6832 638 60 638 c
+h
+f*
+.478431 .305882 0 rg
+BT /F2 9 Tf 10.8 TL ET
+BT 1 0 0 1 66 649 Tm (SYNTHETIC TEST DATA - NOT A REAL PATIENT RECORD) Tj T* ET
+.062745 .164706 .262745 rg
+BT /F2 13 Tf 15.6 TL ET
+BT 1 0 0 1 54 602 Tm (Referral information) Tj T* ET
+.85098 .886275 .92549 RG
+n 54 594 m 558 594 l S
+.141176 .231373 .32549 rg
+BT /F1 11 Tf 13.2 TL ET
+BT 1 0 0 1 66 564 Tm (Patient Name: TEST PATIENT BETA) Tj T* ET
+.141176 .231373 .32549 rg
+BT /F1 11 Tf 13.2 TL ET
+BT 1 0 0 1 66 536 Tm (Referring Provider: SYNTHETIC PROVIDER 002) Tj T* ET
+.141176 .231373 .32549 rg
+BT /F1 11 Tf 13.2 TL ET
+BT 1 0 0 1 66 508 Tm (Requested Service: Orthopedics consultation) Tj T* ET
+.141176 .231373 .32549 rg
+BT /F1 11 Tf 13.2 TL ET
+BT 1 0 0 1 66 480 Tm (Specialty: orthopedics) Tj T* ET
+.062745 .164706 .262745 rg
+BT /F2 13 Tf 15.6 TL ET
+BT 1 0 0 1 54 448 Tm (Document checklist) Tj T* ET
+.85098 .886275 .92549 RG
+n 54 440 m 558 440 l S
+.141176 .231373 .32549 rg
+BT /F1 11 Tf 13.2 TL ET
+BT 1 0 0 1 66 412 Tm (Document Type: referral_order) Tj T* ET
+BT 1 0 0 1 66 387 Tm (Submission Channel: synthetic_fixture) Tj T* ET
+.062745 .164706 .262745 rg
+BT /F2 13 Tf 15.6 TL ET
+BT 1 0 0 1 54 339 Tm (Notes) Tj T* ET
+.85098 .886275 .92549 RG
+n 54 331 m 558 331 l S
+.2 .305882 .407843 rg
+BT /F1 9.5 Tf 11.4 TL ET
+BT 1 0 0 1 66 305 Tm (The date of birth is intentionally absent.) Tj T* ET
+BT 1 0 0 1 66 283 Tm (This case must not be routed until deterministic completeness rules pass.) Tj T* ET
+.384314 .490196 .596078 rg
+BT /F1 8 Tf 9.6 TL ET
+BT 1 0 0 1 54 42 Tm (Fixture ID: synthetic-referral-incomplete-001) Tj T* ET
+BT 1 0 0 1 388.152 42 Tm (Generated deterministically for MedBot Phase 1) Tj T* ET
+ 
+endstream
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000061 00000 n 
+0000000102 00000 n 
+0000000209 00000 n 
+0000000321 00000 n 
+0000000514 00000 n 
+0000000582 00000 n 
+0000000843 00000 n 
+0000000902 00000 n 
+trailer
+<<
+/ID 
+[<1c178198fbdfa51b25995d89d4102043><1c178198fbdfa51b25995d89d4102043>]
+% ReportLab generated PDF document -- digest (opensource)
+
+/Info 6 0 R
+/Root 5 0 R
+/Size 9
+>>
+startxref
+3084
+%%EOF
