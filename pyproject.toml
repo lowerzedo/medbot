@@ -18,7 +18,7 @@ dependencies = [
   "opentelemetry-instrumentation-fastapi>=0.58b0,<1",
   "opentelemetry-sdk>=1.37,<2",
   "prometheus-client>=0.22,<1",
-  "psycopg[binary]==3.3.4",
+  "psycopg[binary]==3.3.6",
   "pydantic==2.13.4",
   "pydantic-ai-slim[openai,google]==2.57.0",
   "pypdfium2==5.14.0",
